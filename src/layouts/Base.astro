@@ -1,0 +1,27 @@
+---
+import { u } from '../lib/u';
+const { title = 'My studio', description = 'Writing, photos, videos, thoughts and timelines.' } = Astro.props;
+const nav = [['Writing','/writing/'],['Photos','/photos/'],['Videos','/videos/'],['Thoughts','/thoughts/'],['Timelines','/timelines/'],['About','/about/']];
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title><meta name="description" content={description}><meta property="og:title" content={title}><meta property="og:description" content={description}></head>
+<body><a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href={u('/')}>My studio</a>
+<nav aria-label="Main">{nav.map(([l,p]) => <a href={u(p)}>{l}</a>)}</nav></header>
+<main id="main"><slot /></main>
+<footer>Sample content is marked “Sample”. Replace it in the CMS.</footer>
+<style is:global>
+:root{--wall:#2a1d14;--wood:#4a3222;--paper:#f2ead8;--ink:#1d1a16;--olive:#6b7a45;--amber:#d9a441;--red:#a6362b;--grey:#9a9186;--serif:Georgia,'Iowan Old Style','Times New Roman',serif;--sans:system-ui,-apple-system,'Segoe UI',sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--wall);color:var(--paper);font:1rem/1.6 var(--sans)}
+a{color:inherit}a:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.skip{position:absolute;left:-999px}.skip:focus{left:1rem;top:1rem;background:var(--amber);color:var(--ink);padding:.5rem 1rem;z-index:9}
+.top{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;justify-content:space-between;align-items:center;padding:1rem clamp(1rem,4vw,3rem);background:var(--wood);border-bottom:4px solid #2a1d14}
+.brand{font:700 1.4rem var(--serif);text-decoration:none}.top nav{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem}.top nav a{text-decoration:none;padding:.5rem 0}.top nav a:hover{color:var(--amber)}
+main{max-width:64rem;margin:0 auto;padding:2rem clamp(1rem,4vw,2rem) 4rem}footer{text-align:center;color:var(--grey);padding:2rem;font-size:.875rem}
+h1,h2,h3{font-family:var(--serif);line-height:1.2}h1{font-size:clamp(2rem,5vw,3.25rem);margin:.5rem 0 1rem}
+.sheet{background:var(--paper);color:var(--ink);padding:clamp(1.25rem,4vw,3rem);border-radius:3px;box-shadow:0 8px 24px #0007}
+.sheet p,.sheet li{font:1.125rem/1.75 var(--serif);max-width:42rem}.meta{color:var(--grey);font-size:.875rem}
+.sheet .meta{color:#6d655a}.tag{display:inline-block;border:1px solid currentColor;border-radius:99px;padding:0 .6rem;font-size:.8rem;margin-right:.35rem}
+.empty{border:2px dashed var(--grey);padding:2rem;border-radius:4px;color:var(--grey)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></body></html>

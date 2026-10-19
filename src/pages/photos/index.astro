@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { u } from '../../lib/u';
+const photos = (await getCollection('photos', e => !e.data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+---
+<Base title="Photos"><h1>The gallery</h1>
+{photos.length === 0 ? <p class="empty">No photos yet. Upload one in the CMS.</p> :
+<ul class="wall">{photos.map((p, i) => <li id={p.id} style={`--r:${(i % 5 - 2) * 1.2}deg`}><button data-src={u(p.data.image)} data-alt={p.data.alt} data-cap={p.data.title + (p.data.caption ? ' — ' + p.data.caption : '')} aria-label={`Open ${p.data.title}`}>
+<img src={u(p.data.image)} alt={p.data.alt} loading="lazy" /><span>{p.data.title}</span></button></li>)}</ul>}
+<dialog id="v"><img alt="" /><p></p><button id="x">Close</button></dialog>
+<style>.wall{list-style:none;padding:0;columns:14rem;gap:1.5rem}.wall li{break-inside:avoid;margin-bottom:1.5rem;transform:rotate(var(--r))}
+.wall button{all:unset;cursor:pointer;display:block;background:var(--paper);color:var(--ink);padding:.6rem .6rem 0;box-shadow:3px 6px 12px #0008;transition:transform .2s}.wall button:hover,.wall button:focus-visible{transform:scale(1.04)}
+.wall img{width:100%;display:block}.wall span{display:block;padding:.6rem 0;font:italic 1rem var(--serif)}
+dialog{max-width:min(92vw,60rem);background:var(--paper);color:var(--ink);border:0;padding:1rem}dialog::backdrop{background:#000c}dialog img{max-width:100%;max-height:75vh;display:block;margin:auto}</style>
+<script>
+const d = document.querySelector<HTMLDialogElement>('#v')!;
+document.querySelectorAll<HTMLButtonElement>('.wall button').forEach(b => b.addEventListener('click', () => {
+  const i = d.querySelector('img')!; i.src = b.dataset.src!; i.alt = b.dataset.alt!; d.querySelector('p')!.textContent = b.dataset.cap!; d.showModal();
+}));
+document.querySelector('#x')!.addEventListener('click', () => d.close());
+</script></Base>

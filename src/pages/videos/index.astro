@@ -1,0 +1,12 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { fmt } from '../../lib/u';
+const vids = (await getCollection('videos', e => !e.data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+const src = (v: any) => v.provider === 'vimeo' ? `https://player.vimeo.com/video/${v.videoId}?dnt=1` : `https://www.youtube-nocookie.com/embed/${v.videoId}`;
+---
+<Base title="Videos"><h1>The cinema</h1>
+{vids.length === 0 ? <p class="empty">No videos yet. Add one in the CMS.</p> :
+vids.map(v => <article id={v.id} class="reel"><h2>{v.data.title}</h2><p class="meta">{v.data.category} · {fmt(v.data.date)}</p><p>{v.data.description}</p>
+{v.data.videoId ? <iframe src={src(v.data)} title={v.data.title} loading="lazy" allowfullscreen></iframe> : <p class="empty">No video ID yet. Add a YouTube or Vimeo ID in the CMS to show the player.</p>}</article>)}
+<style>.reel{background:#14100c;padding:1.5rem;margin:0 0 2rem;border-top:2rem solid var(--paper)}iframe{width:100%;aspect-ratio:16/9;border:0}</style></Base>

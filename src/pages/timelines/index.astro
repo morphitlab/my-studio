@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { fmt } from '../../lib/u';
+const tl = (await getCollection('timelines', e => !e.data.draft)).sort((a, b) => +b.data.start - +a.data.start);
+const now = new Date();
+// Rules: completed and on-hold come from explicit status. Otherwise state comes from dates. Elapsed time is NOT progress.
+function info(d: any) {
+  const end: Date = d.currentTarget ?? d.target, extended = !!d.currentTarget && +d.currentTarget !== +d.target;
+  let state = 'In progress';
+  if (d.status === 'completed') state = d.completed ? `Completed ${fmt(d.completed)}` : 'Completed';
+  else if (d.status === 'on-hold') state = 'On hold';
+  else if (+now < +d.start) state = 'Not started';
+  else if (+now > +end) state = 'Overdue';
+  else if (+end - +now < 14 * 864e5) state = 'Approaching target';
+  const full = Math.max(+end, +d.target), span = full - +d.start;
+  const pct = (x: Date) => Math.min(100, Math.max(0, (+x - +d.start) / span * 100));
+  return { end, extended, state, pTarget: pct(d.target), pEnd: pct(end), pNow: pct(now), elapsed: Math.round(pct(now)) };
+}
+---
+<Base title="Timelines"><h1>The wall</h1>
+{tl.length === 0 ? <p class="empty">No timelines yet. Create one in the CMS.</p> :
+tl.map(t => { const i = info(t.data); return (
+<article id={t.id} class="sheet tl"><h2>{t.data.title}</h2><p class="meta"><b>{i.state}</b> · {fmt(t.data.start)} to {fmt(i.end)}{i.extended && ` (originally ${fmt(t.data.target)})`}</p><p>{t.data.description}</p>
+<div class="bar" role="img" aria-label={`${i.state}. Progress ${t.data.progress ?? 'not set'}%. Time elapsed ${i.elapsed}%.`}>
+<i class="done" style={`width:${(t.data.progress ?? 0) * i.pEnd / 100}%`}></i><i class="ext" style={`left:${i.pTarget}%;width:${i.pEnd - i.pTarget}%`}></i>
+<u class="now" style={`left:${i.pNow}%`}></u>{t.data.milestones.map(m => { const p = Math.min(100, Math.max(0, (+m.date - +t.data.start) / (Math.max(+i.end, +t.data.target) - +t.data.start) * 100)); return <s class="ms" style={`left:${p}%`} title={`${m.title}, ${fmt(m.date)}`}></s>; })}</div>
+<p class="meta">Actual progress: {t.data.progress != null ? t.data.progress + '%' : 'not set'} · Time elapsed: {i.elapsed}%</p>
+<ul>{t.data.milestones.map(m => <li>{fmt(m.date)}: {m.title}</li>)}</ul></article>); })}
+<style>.tl{margin-bottom:2rem}.bar{position:relative;height:1.1rem;background:#d6ccb6;margin:1.5rem 0 .5rem}.bar i{position:absolute;top:0;bottom:0}.done{background:var(--olive);left:0}.ext{background:repeating-linear-gradient(45deg,var(--amber) 0 6px,#f0c870 6px 12px)}
+.now{position:absolute;top:-.5rem;bottom:-.5rem;width:3px;background:var(--red);text-decoration:none}.ms{position:absolute;top:-.3rem;width:.7rem;height:.7rem;background:var(--ink);transform:rotate(45deg)}</style></Base>

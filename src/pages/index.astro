@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { u, fmt } from '../lib/u';
+const types = ['writing','photos','videos','thoughts','timelines'] as const;
+const all = (await Promise.all(types.map(async t => (await getCollection(t, (e: any) => !e.data.draft)).map((e: any) => ({ t, e }))))).flat().sort((a: any, b: any) => +b.e.data.date - +a.e.data.date);
+const featured = all.find((x: any) => x.e.data.featured);
+const href = (t: string, id: string) => t === 'writing' ? u(`/writing/${id}/`) : u(`/${t}/#${id}`);
+const label = (x: any) => x.e.data.title || (x.e.body ?? '').slice(0, 70) || x.e.id;
+---
+<Base title="My studio">
+<section aria-label="The studio">
+  <h1>Come in. This is where I think out loud.</h1>
+  <p class="lead">Essays, photographs, videos, short thoughts and long-running projects. Pick something off the shelf.</p>
+  <div class="shelf">
+    <a class="obj book b1" href={u('/writing/')}><span>Writing</span></a>
+    <a class="obj book b2" href={u('/writing/')} aria-hidden="true" tabindex="-1"></a>
+    <a class="obj polaroid" href={u('/photos/')}><span>Photos</span></a>
+    <a class="obj tape" href={u('/videos/')}><span>Videos</span></a>
+    <a class="obj note" href={u('/thoughts/')}><span>Thoughts</span></a>
+    <a class="obj chart" href={u('/timelines/')}><span>Timelines</span></a>
+  </div>
+</section>
+{featured && <section><h2>Featured</h2><a class="item" href={href(featured.t, featured.e.id)}><b>{label(featured)}</b><span class="meta">{featured.t} · {fmt(featured.e.data.date)}</span></a></section>}
+<section><h2>Recently published</h2>
+<div class="filters" role="group" aria-label="Filter by type"><button data-f="all" aria-pressed="true">All</button>{types.map(t => <button data-f={t} aria-pressed="false">{t[0].toUpperCase()+t.slice(1)}</button>)}</div>
+{all.length === 0 ? <p class="empty">Nothing published yet. Add your first piece in the CMS.</p> :
+<ul class="feed">{all.slice(0, 30).map((x: any) => <li data-type={x.t}><a class="item" href={href(x.t, x.e.id)}><b>{label(x)}</b><span class="meta">{x.t} · {fmt(x.e.data.date)}</span></a></li>)}</ul>}
+</section>
+<style>
+.lead{font:1.25rem/1.6 var(--serif);max-width:38rem;color:#e6dcc6}
+.shelf{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin:2rem 0;padding:1.5rem 1.5rem 0;background:linear-gradient(#0000 calc(100% - 18px),var(--wood) 0)}
+.obj{display:flex;align-items:flex-end;justify-content:center;text-decoration:none;color:var(--ink);font:700 1rem var(--serif);padding:.75rem;box-shadow:4px 6px 12px #0008;transition:transform .2s;margin-bottom:18px}
+.obj:hover,.obj:focus-visible{transform:translateY(-10px) rotate(-2deg)}
+.book{width:3.5rem;writing-mode:vertical-rl}.b1{height:11rem;background:var(--olive);color:var(--paper)}.b2{height:9rem;background:var(--red)}
+.polaroid{width:9rem;height:10.5rem;border:.6rem solid var(--paper);border-bottom-width:2.5rem;background:linear-gradient(135deg,#8a6a45,#c9a46a);transform:rotate(3deg)}
+.tape{width:12rem;height:7rem;background:#1d1a16;color:var(--paper);border-top:2.2rem solid var(--paper)}
+.note{width:9rem;height:8rem;background:var(--amber);transform:rotate(-2deg)}.chart{width:12rem;height:5rem;background:linear-gradient(90deg,var(--olive) 60%,var(--amber) 60% 80%,var(--paper) 80%)}
+.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}.filters button{font:inherit;background:none;color:inherit;border:1px solid var(--grey);border-radius:99px;padding:.4rem 1rem;cursor:pointer}.filters button[aria-pressed=true]{background:var(--paper);color:var(--ink)}
+.feed{list-style:none;padding:0;display:grid;gap:.75rem}.item{display:flex;flex-direction:column;gap:.15rem;background:var(--wood);padding:1rem 1.25rem;text-decoration:none;border-left:5px solid var(--amber)}.item:hover{background:#5a3f2b}.feed li[hidden]{display:none}
+</style>
+<script>
+const btns = document.querySelectorAll<HTMLButtonElement>('.filters button');
+btns.forEach(b => b.addEventListener('click', () => {
+  btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  document.querySelectorAll<HTMLElement>('.feed li').forEach(li => li.hidden = b.dataset.f !== 'all' && li.dataset.type !== b.dataset.f);
+}));
+</script>
+</Base>

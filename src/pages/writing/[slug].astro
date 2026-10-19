@@ -1,0 +1,17 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+import { u, fmt } from '../../lib/u';
+export async function getStaticPaths() {
+  const posts = (await getCollection('writing', e => !e.data.draft)).sort((a, b) => +a.data.date - +b.data.date);
+  return posts.map((p, i) => ({ params: { slug: p.id }, props: { p, prev: posts[i - 1], next: posts[i + 1] } }));
+}
+const { p, prev, next } = Astro.props;
+const { Content } = await render(p);
+const words = (p.body ?? '').split(/\s+/).length;
+---
+<Base title={p.data.title} description={p.data.description}>
+<article class="sheet"><p class="meta"><a href={u('/writing/')}>Back to the library</a></p>
+<h1>{p.data.title}</h1><p class="meta">{fmt(p.data.date)} · {Math.max(1, Math.round(words / 220))} min read {p.data.tags.map(t => <span class="tag">{t}</span>)}</p>
+<Content />
+<p class="meta">{prev && <a href={u(`/writing/${prev.id}/`)}>Previous: {prev.data.title}</a>} {next && <a href={u(`/writing/${next.id}/`)}>Next: {next.data.title}</a>}</p></article></Base>

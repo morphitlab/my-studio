@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { marked } from 'marked';
+import { fmt } from '../../lib/u';
+const all = (await getCollection('thoughts', e => !e.data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+const PER = 20;
+---
+<Base title="Thoughts"><h1>Thoughts</h1>
+{all.length === 0 ? <p class="empty">No thoughts yet. Write a short one in the CMS.</p> :
+<ol class="stream">{all.map((t, i) => <li id={t.id} hidden={i >= PER}>{t.data.title && <h2>{t.data.title}</h2>}<div class="body" set:html={marked.parse(t.body ?? '')} />
+<p class="meta">{fmt(t.data.date)}{t.data.thread && ` · thread: ${t.data.thread}${t.data.seq ? ' #' + t.data.seq : ''}`} {t.data.tags.map(x => <span class="tag">{x}</span>)}</p></li>)}</ol>}
+{all.length > PER && <button id="more" class="more">Show more</button>}
+<style>.stream{list-style:none;padding:0;max-width:40rem}.stream li{padding:1.25rem 0 1.25rem 1.25rem;border-left:3px solid var(--olive)}.stream li[hidden]{display:none}.stream h2{margin:0 0 .25rem;font-size:1.2rem}.body{font:1.2rem/1.6 var(--serif)}.more{font:inherit;padding:.5rem 1.25rem;cursor:pointer}</style>
+<script>document.querySelector('#more')?.addEventListener('click', e => { const h = [...document.querySelectorAll<HTMLElement>('.stream li[hidden]')]; h.slice(0, 20).forEach(l => l.hidden = false); if (h.length <= 20) (e.target as HTMLElement).remove(); });</script></Base>
